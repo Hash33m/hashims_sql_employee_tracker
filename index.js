@@ -25,8 +25,15 @@ async function addDepartment() {
   ]);
 
   const department = await db.promise().query("INSERT INTO department(name) VALUES (?)", response.department);
-  console.log("Added department", department);
+  if (department[0].affectedRows > 0) {
+    console.log(response.department, "has been added")
+  }
+  else {
+    console.log("sorry department could not be added")
+  }
+  
   mainMenu();
+  
 }
 
 async function addRole() {
