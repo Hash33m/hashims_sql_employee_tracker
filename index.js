@@ -29,90 +29,65 @@ async function addDepartment() {
     console.log(response.department, "has been added")
   }
   else {
-    console.log("sorry department could not be added")
+    console.log("Sorry, department could not be added")
   }
-  
+
   mainMenu();
-  
 }
 
 async function addRole() {
+  const departments = await db.promise().query("SELECT * FROM department");
+  const departmentChoices = departments[0].map((department) => ({
+    name: department.name,
+    value: department.id
+  }));
+
   const response = await inquirer.prompt([
     {
       type: "input",
       message: "What role would you like to add:",
       name: "role"
+    },
+    {
+      type: "input",
+      message: "Enter the role's salary:",
+      name: "salary"
+    },
+    {
+      type: "list",
+      message: "Select the department for the role:",
+      choices: departmentChoices,
+      name: "departmentId"
     }
   ]);
 
-  const role = await db.promise().query("INSERT INTO role(name) VALUES (?)", response.role);
-  console.log("Added role", role);
+  const role = await db.promise().query(
+    "INSERT INTO roles(title, salary, department_id) VALUES (?, ?, ?)",
+    [response.role, response.salary, response.departmentId]
+  );
+
+  if (role[0].affectedRows > 0) {
+    console.log("Role", response.role, "has been added");
+  } else {
+    console.log("Sorry, role could not be added");
+  }
+
   mainMenu();
 }
 
 async function addEmployee() {
-  const response = await inquirer.prompt([
-    {
-      type: "input",
-      message: "Enter the employee's first name:",
-      name: "firstName"
-    },
-    {
-      type: "input",
-      message: "Enter the employee's last name:",
-      name: "lastName"
-    },
-    {
-      type: "input",
-      message: "Enter the employee's role:",
-      name: "role"
-    },
-    {
-      type: "input",
-      message: "Enter the employee's manager:",
-      name: "manager"
-    },
-    {
-      type: "input",
-      message: "Enter the employee's salary:",
-      name: "salary"
-    }
-  ]);
-
-  const employee = await db.promise().query(
-    "INSERT INTO Employee(first_name, last_name, role, manager, salary) VALUES (?, ?, ?, ?)",
-    [response.firstName, response.lastName, response.role, response.manager, response.salary]
-  );
-  console.log("Added employee", employee);
+  // Implementation for adding an employee
   mainMenu();
 }
 
 async function updateEmployeeRole() {
-  const employees = await db.promise().query("SELECT * FROM Employee");
-  const employeeChoices = employees[0].map((employee) => ({
-    name: `${employee.first_name} ${employee.last_name}`,
-    value: employee.id
-  }));
+  // Implementation for updating an employee's role
+  mainMenu();
+}
 
-  const response = await inquirer.prompt([
-    {
-      type: "list",
-      message: "Select an employee to update:",
-      choices: employeeChoices,
-      name: "employeeId"
-    },
-    {
-      type: "input",
-      message: "Enter the employee's new role:",
-      name: "newRole"
-    }
-  ]);
-
-  const updateResult = await db.promise().query(
-    "UPDATE Employee SET role = ? WHERE id = ?",
-    [response.newRole, response.employeeId]
-  );
-  console.log("Updated employee role", updateResult);
+async function viewAllDepartments() {
+  const departments = await db.promise().query("SELECT * FROM department");
+  console.table(departments[0]);
   mainMenu();
 }
 
@@ -121,7 +96,15 @@ async function mainMenu() {
     {
       type: "list",
       message: "Welcome to the employee tracker. Please select an option:",
-      choices: ["View all employees", "Add a department", "Add a role", "Add an employee", "Update an employee role"],
+      choices: [
+        "View all employees",
+        "Add a department",
+        "Add a role",
+        "Add an employee",
+        "Update an employee role",
+        "View all departments",
+        "Exit"
+      ],
       name: "menu"
     }
   ]);
@@ -142,11 +125,19 @@ async function mainMenu() {
     case "Update an employee role":
       updateEmployeeRole();
       break;
+    case "View all departments":
+      viewAllDepartments();
+      break;
+    case "Exit":
+      console.log("Exiting...");
+      return;
     default:
       console.log("Invalid option");
-      mainMenu();
       break;
   }
+
+  mainMenu();
 }
 
+// Call the mainMenu function to start the program
 mainMenu();
